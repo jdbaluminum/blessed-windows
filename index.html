@@ -159,7 +159,7 @@ select.inp{cursor:pointer}
 .terms strong{color:#555}
 
 /* FOOTER */
-.footer{text-align:center;padding:20px 16px;font-size:12px;color:#888;border-top:1px solid #e5e7eb}
+.footer{text-align:center;padding:16px;font-size:12px;color:#888;border-top:1px solid #e5e7eb;margin-bottom:0}
 .trust{display:flex;justify-content:center;flex-wrap:wrap;gap:14px;margin-bottom:10px;font-size:12px;color:#666}
 </style>
 </head>
@@ -364,7 +364,7 @@ select.inp{cursor:pointer}
     </div>
   </div>
 
-  <div style="height:16px"></div>
+  
 
   <!-- TERMS -->
   <!-- AVAILABILITY NOTE -->
@@ -727,6 +727,24 @@ document.getElementById('admin-overlay').addEventListener('click',function(e){
     wrap.style.cssText += ';display:block!important;visibility:visible!important;width:100%!important';
   }
 })();
+
+// Auto-resize iframe height
+function notifyParentHeight(){
+  try{
+    var h = Math.max(
+      document.body.scrollHeight,
+      document.body.offsetHeight,
+      document.documentElement.scrollHeight
+    );
+    window.parent.postMessage({iframeHeight: h}, '*');
+  } catch(e){}
+}
+window.addEventListener('load', function(){
+  notifyParentHeight();
+  setTimeout(notifyParentHeight, 500);
+  setTimeout(notifyParentHeight, 1500);
+});
+window.addEventListener('resize', notifyParentHeight);
 
 // Initialize on load
 applyConfigData();
