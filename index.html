@@ -514,12 +514,12 @@ const STORE_KEY = 'bw_especial_config';
 // These are set when you activate the special from the admin panel
 // Default: inactive
 var SPECIAL_ACTIVE = true;
-var SPECIAL_START  = '2026-08-01T11:00:00.000Z';
+var SPECIAL_START  = '2026-08-01T12:00:00.000Z';
 var SPECIAL_END    = '2026-08-31T20:00:00.000Z';
 var SPECIAL_W      = 24;
 var SPECIAL_H      = 48;
-var SPECIAL_BASE   = 465;
-var SPECIAL_PRICES = [429,399,369,339];
+var SPECIAL_BASE   = 465.33;
+var SPECIAL_PRICES = [455, 439, 419, 369];
 
 function setCookie(name,value,days){
   var expires='';
@@ -806,42 +806,46 @@ function activateSpecial(){
   // Save to storage as backup
   saveConfig({active:true,start:startISO,end:endISO,w,h,base,prices:[p1,p2,p3,p4]});
 
-  // Generate new HTML with hardcoded dates for GitHub upload
-  fetch(window.location.href)
-  .then(r=>r.text())
-  .then(function(src){
-    src = src.replace('var SPECIAL_ACTIVE = false;', 'var SPECIAL_ACTIVE = true;');
-    src = src.replace("var SPECIAL_START  = '';", "var SPECIAL_START  = '"+startISO+"';");
-    src = src.replace("var SPECIAL_END    = '';", "var SPECIAL_END    = '"+endISO+"';");
-    src = src.replace('var SPECIAL_W      = 24;', 'var SPECIAL_W      = '+w+';');
-    src = src.replace('var SPECIAL_H      = 48;', 'var SPECIAL_H      = '+h+';');
-    src = src.replace('var SPECIAL_BASE   = 465.33;', 'var SPECIAL_BASE   = '+base+';');
-    src = src.replace('var SPECIAL_PRICES = [455, 439, 419, 369];', 'var SPECIAL_PRICES = ['+p1+','+p2+','+p3+','+p4+'];');
+  // Update hardcoded vars in memory immediately
+  SPECIAL_ACTIVE = true;
+  SPECIAL_START  = startISO;
+  SPECIAL_END    = endISO;
+  SPECIAL_W      = w;
+  SPECIAL_H      = h;
+  SPECIAL_BASE   = base;
+  SPECIAL_PRICES = [p1,p2,p3,p4];
 
-    // Download the updated file
-    var blob = new Blob([src], {type:'text/html'});
-    var a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'index.html';
-    a.click();
-    URL.revokeObjectURL(a.href);
+  applyConfigData();
+  applyConfig();
+  loadAdminUI();
+  closeAdmin();
 
-    applyConfigData();
-    applyConfig();
-    loadAdminUI();
-    alert('✅ Archivo descargado. Sube el index.html a GitHub para activar el especial permanentemente.\n\nMedidas: '+w+'" × '+h+'" | Precios: $'+p1+' / $'+p2+' / $'+p3+' / $'+p4);
-  }).catch(function(){
-    // Fallback if fetch fails
-    applyConfigData();
-    applyConfig();
-    loadAdminUI();
-    alert('✅ Especial activado en este dispositivo.\nPara hacerlo permanente sube el archivo a GitHub manualmente.');
-  });
+  // Show instructions to update GitHub
+  setTimeout(function(){
+    alert(
+      '✅ ESPECIAL ACTIVADO\n\n' +
+      'El contador está corriendo en esta sesión.\n\n' +
+      'Para que sea PERMANENTE (sobreviva refrescos):\n' +
+      '1. Ve a github.com/jdbaluminum/blessed-windows\n' +
+      '2. Abre index.html → lápiz ✏️\n' +
+      '3. Busca: var SPECIAL_ACTIVE = false\n' +
+      '   Cámbialo a: var SPECIAL_ACTIVE = true\n' +
+      '4. Busca: var SPECIAL_START  = \'\'\n' +
+      '   Cámbialo a: var SPECIAL_START  = \'' + startISO + '\'\n' +
+      '5. Busca: var SPECIAL_END    = \'\'\n' +
+      '   Cámbialo a: var SPECIAL_END    = \'' + endISO + '\'\n' +
+      '6. Commit changes'
+    );
+  }, 300);
 }
 function stopSpecial(){
+  SPECIAL_ACTIVE = false;
+  SPECIAL_START  = '';
+  SPECIAL_END    = '';
   saveConfig({active:false});
   applyConfig();
   loadAdminUI();
+  alert('⏹ Especial detenido.\n\nPara hacerlo permanente en GitHub:\nCambia var SPECIAL_ACTIVE = true → false');
 }
 
 // Close overlay on outside click
