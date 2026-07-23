@@ -180,7 +180,13 @@ select.inp{cursor:pointer}
 .qf-success strong{display:block;font-size:16px;margin-bottom:4px;color:#173404}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-<script>emailjs.init('ByFr8l6Ds6JQueuMb');</script>
+<script>
+window.addEventListener('load', function(){
+  if(typeof emailjs !== 'undefined'){
+    emailjs.init('ByFr8l6Ds6JQueuMb');
+  }
+});
+</script>
 </head>
 <body>
 
@@ -854,17 +860,24 @@ function sendQuote(){
   );
 
   // Send email via EmailJS
-  emailjs.send('service_dggf5ga', 'template_0r6vjma', {
+  var templateParams = {
     nombre:   name,
     telefono: tel,
     email:    email,
     calculo:  calcText,
     notas:    notes || 'Ninguna',
     fecha:    new Date().toLocaleString('es-PR')
-  }).then(function(){
-    console.log('Email enviado');
+  };
+  emailjs.send('service_7mf8c3g', 'template_0r6vjma', templateParams)
+  .then(function(response){
+    var success = document.getElementById('qf-success');
+    if(success) success.innerHTML = '<strong>✅ Solicitud enviada correctamente</strong><br>Te contactaremos pronto al ' + tel + '<br>También puedes llamarnos al <strong>(787) 415-3637</strong>';
   }, function(error){
-    console.log('Email error:', error);
+    var success = document.getElementById('qf-success');
+    if(success) success.innerHTML = '<strong>⚠️ WhatsApp enviado.</strong><br>Si no recibes confirmación por email llámanos al <strong>(787) 415-3637</strong>';
+    if(success) success.style.background = '#FAEEDA';
+    if(success) success.style.borderColor = '#EF9F27';
+    if(success) success.style.color = '#633806';
   });
 
   // Open WhatsApp to owner
@@ -879,10 +892,25 @@ function sendQuote(){
 // Update summary when slider changes
 const _origUpdate = typeof update === 'function' ? update : null;
 
-// Initialize on load
-applyConfigData();
-applyConfig();
-setTimeout(updateQuoteSummary, 800);
+// Initialize on load — wait for DOM ready
+function initPage(){
+  applyConfigData();
+  applyConfig();
+  setTimeout(updateQuoteSummary, 500);
+}
+
+if(document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', initPage);
+} else {
+  initPage();
+}
+
+// Also re-apply when page becomes visible again (user returns to tab)
+document.addEventListener('visibilitychange', function(){
+  if(document.visibilityState === 'visible'){
+    applyConfig();
+  }
+});
 
 </script>
 
