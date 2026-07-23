@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>V44 — Especial de Temporada — Ventanas de Aluminio · Blessed Windows Studio</title>
+<title>V45 — Especial de Temporada — Ventanas de Aluminio · Blessed Windows Studio</title>
 <style>
 /* Odoo mobile compatibility */
 #wrap, .o_main_navbar, .o_action_manager{display:block!important}
@@ -461,20 +461,24 @@ window.addEventListener('load', function(){
 <script>
 // ── SELF-CONTAINED COUNTDOWN (runs independently) ────────────────
 (function(){
-  var START = new Date('2026-08-01T12:00:00.000Z').getTime();
-  var END   = new Date('2026-08-31T20:00:00.000Z').getTime();
-  var ACTIVE = true;
+  // These can be updated by admin panel
+  window._CDN_START  = new Date('2026-08-01T12:00:00.000Z').getTime();
+  window._CDN_END    = new Date('2026-08-31T20:00:00.000Z').getTime();
+  window._CDN_ACTIVE = true;
+  var START  = function(){ return window._CDN_START; };
+  var END    = function(){ return window._CDN_END; };
+  var ACTIVE = function(){ return window._CDN_ACTIVE; };
 
   function p(n){ return String(Math.floor(Math.abs(n))).padStart(2,'0'); }
 
   function updateDisplay(){
     var now = Date.now();
 
-    if(!ACTIVE){ return; }
+    if(!ACTIVE()){ return; }
 
-    if(now < START){
+    if(now < START()){
       // Show before countdown
-      var diff = START - now;
+      var diff = START() - now;
       var el;
       el=document.getElementById('cb-d'); if(el) el.textContent=p(diff/864e5);
       el=document.getElementById('cb-h'); if(el) el.textContent=p((diff%864e5)/36e5);
@@ -487,9 +491,9 @@ window.addEventListener('load', function(){
       el=document.getElementById('urgency-bar');      if(el) el.style.background='#0C447C';
       el=document.getElementById('urgency-msg');      if(el) el.textContent='⏳ Próximo especial — ¡prepárate!';
 
-    } else if(now < END){
+    } else if(now < END()){
       // Show active countdown
-      var diff = END - now;
+      var diff = END() - now;
       var el;
       el=document.getElementById('cd-d'); if(el) el.textContent=p(diff/864e5);
       el=document.getElementById('cd-h'); if(el) el.textContent=p((diff%864e5)/36e5);
@@ -510,6 +514,17 @@ window.addEventListener('load', function(){
       el=document.getElementById('urgency-bar');      if(el) el.style.background='#555';
     }
   }
+
+  // On load, check localStorage for admin-saved config
+  try{
+    var saved = localStorage.getItem('bw_cdn');
+    if(saved){
+      var cfg = JSON.parse(saved);
+      if(typeof cfg.active !== 'undefined') window._CDN_ACTIVE = cfg.active;
+      if(cfg.start) window._CDN_START = new Date(cfg.start).getTime();
+      if(cfg.end)   window._CDN_END   = new Date(cfg.end).getTime();
+    }
+  }catch(e){}
 
   // Run immediately and every second
   updateDisplay();
@@ -861,9 +876,11 @@ function loadAdminUI(){
     document.getElementById('adm-p3').value = cfg.prices[2];
     document.getElementById('adm-p4').value = cfg.prices[3];
   }
-  // Set date inputs
-  if(cfg.start) document.getElementById('adm-start').value = toLocalInput(cfg.start);
-  if(cfg.end)   document.getElementById('adm-end').value   = toLocalInput(cfg.end);
+  // Set date inputs — use window vars if available
+  var startToShow = cfg.start || (window._CDN_START ? new Date(window._CDN_START).toISOString() : '');
+  var endToShow   = cfg.end   || (window._CDN_END   ? new Date(window._CDN_END).toISOString()   : '');
+  if(startToShow) document.getElementById('adm-start').value = toLocalInput(startToShow);
+  if(endToShow)   document.getElementById('adm-end').value   = toLocalInput(endToShow);
   // Status
   let statusHTML = '';
   if(!cfg.active){
@@ -900,7 +917,7 @@ function activateSpecial(){
   // Save to storage as backup
   saveConfig({active:true,start:startISO,end:endISO,w,h,base,prices:[p1,p2,p3,p4]});
 
-  // Update hardcoded vars in memory immediately
+  // Update hardcoded vars in memory
   SPECIAL_ACTIVE = true;
   SPECIAL_START  = startISO;
   SPECIAL_END    = endISO;
@@ -908,6 +925,20 @@ function activateSpecial(){
   SPECIAL_H      = h;
   SPECIAL_BASE   = base;
   SPECIAL_PRICES = [p1,p2,p3,p4];
+
+  // Update countdown vars directly
+  window._CDN_ACTIVE = true;
+  window._CDN_START  = new Date(startISO).getTime();
+  window._CDN_END    = new Date(endISO).getTime();
+
+  // Save to localStorage for persistence
+  try{
+    localStorage.setItem('bw_cdn', JSON.stringify({
+      active: true,
+      start:  startISO,
+      end:    endISO
+    }));
+  }catch(e){}
 
   applyConfigData();
   applyConfig();
@@ -936,10 +967,16 @@ function stopSpecial(){
   SPECIAL_ACTIVE = false;
   SPECIAL_START  = '';
   SPECIAL_END    = '';
+  window._CDN_ACTIVE = false;
+  try{ localStorage.setItem('bw_cdn', JSON.stringify({active:false})); }catch(e){}
   saveConfig({active:false});
   applyConfig();
   loadAdminUI();
-  alert('⏹ Especial detenido.\n\nPara hacerlo permanente en GitHub:\nCambia var SPECIAL_ACTIVE = true → false');
+  // Hide countdown immediately
+  var cb=document.getElementById('countdown-before'); if(cb) cb.style.display='none';
+  var cw=document.getElementById('countdown-wrap');   if(cw) cw.style.display='none';
+  var ub=document.getElementById('urgency-bar');      if(ub) ub.style.background='#888';
+  var um=document.getElementById('urgency-msg');      if(um) um.textContent='📋 Precios especiales de fábrica — Serie 1400';
 }
 
 // Close overlay on outside click
