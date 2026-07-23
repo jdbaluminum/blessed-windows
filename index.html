@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Especial de Temporada — Ventanas de Aluminio · Blessed Windows Studio</title>
+<title>V39 — Especial de Temporada — Ventanas de Aluminio · Blessed Windows Studio</title>
 <style>
 /* Odoo mobile compatibility */
 #wrap, .o_main_navbar, .o_action_manager{display:block!important}
@@ -193,7 +193,7 @@ window.addEventListener('load', function(){
 <div id="landing-wrap" style="display:block!important;visibility:visible!important;width:100%!important;max-width:100%!important;overflow-x:hidden;background:#f4f6f8;margin:0!important;padding:0!important;min-height:100vh">
 
 <!-- URGENCY BAR: 3 states — before, active, ended -->
-<div id="urgency-bar" style="display:flex!important;background:#888;color:#fff;text-align:center;padding:9px 16px;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap">
+<div id="urgency-bar" style="background:#888;color:#fff;text-align:center;padding:9px 16px;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap">
   <span id="urgency-msg">📋 Precios especiales de fábrica — Serie 1400</span>
 </div>
 
@@ -570,11 +570,15 @@ function saveConfig(cfg){
 // Countdown logic
 let _tickInterval = null;
 function setBeforeState(startDate){
-  // Show before-start countdown
-  setStyle('countdown-before','display','block');
-  setStyle('countdown-wrap','display','none');
-  setStyle('especial-ended','display','none');
-  setStyle('urgency-bar','background','#0C447C');
+  // Show before-start countdown — force display
+  var cb = getEl('countdown-before');
+  if(cb){ cb.style.cssText = cb.style.cssText.replace(/display:[^;]+;?/g,''); cb.style.display='block'; }
+  var cw = getEl('countdown-wrap');
+  if(cw){ cw.style.display='none'; }
+  var ee = getEl('especial-ended');
+  if(ee){ ee.style.display='none'; }
+  var ub = getEl('urgency-bar');
+  if(ub){ ub.style.background='#0C447C'; }
   setText('urgency-msg','⏳ Próximo especial — ¡prepárate!');
   // Tick toward start
   if(_tickInterval) clearInterval(_tickInterval);
@@ -672,7 +676,15 @@ function applyConfigData(){
 }
 
 function getEl(id){ return document.getElementById(id); }
-function setStyle(id,prop,val){ const el=getEl(id); if(el) el.style[prop]=val; }
+function setStyle(id,prop,val){
+  const el=getEl(id);
+  if(!el) return;
+  el.style[prop]=val;
+  // Force override any inline style
+  if(prop==='display'){
+    el.setAttribute('style', el.getAttribute('style').replace(/display:[^;]+;?/g,'') + ';display:'+val+'!important');
+  }
+}
 function setText(id,txt){ const el=getEl(id); if(el) el.textContent=txt; }
 
 function setEndedState(){
@@ -683,10 +695,11 @@ function setEndedState(){
   setText('urgency-msg','⏰ Especial finalizado');
 }
 function setActiveState(){
-  setStyle('countdown-before','display','none');
-  setStyle('countdown-wrap','display','block');
-  setStyle('especial-ended','display','none');
-  setStyle('urgency-bar','background','#A32D2D');
+  var cb = getEl('countdown-before'); if(cb) cb.style.display='none';
+  var cw = getEl('countdown-wrap');
+  if(cw){ cw.style.cssText = cw.style.cssText.replace(/display:[^;]+;?/g,''); cw.style.display='block'; }
+  var ee = getEl('especial-ended'); if(ee) ee.style.display='none';
+  var ub = getEl('urgency-bar'); if(ub) ub.style.background='#A32D2D';
   setText('urgency-msg','🔥 Especial activo — ¡aprovecha antes de que termine!');
 }
 function setInactiveState(){
