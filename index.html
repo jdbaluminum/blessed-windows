@@ -510,11 +510,45 @@ const ADMIN_PWD = 'blessed2026';
 
 const STORE_KEY = 'bw_especial_config';
 
-function loadConfig(){
-  try{ return JSON.parse(localStorage.getItem(STORE_KEY))||{}; }
-  catch(e){ return {}; }
+function setCookie(name,value,days){
+  var expires='';
+  if(days){
+    var d=new Date();
+    d.setTime(d.getTime()+(days*864e5));
+    expires=';expires='+d.toUTCString();
+  }
+  document.cookie=name+'='+encodeURIComponent(value)+expires+';path=/;SameSite=None;Secure';
 }
-function saveConfig(cfg){ localStorage.setItem(STORE_KEY, JSON.stringify(cfg)); }
+function getCookie(name){
+  var n=name+'=';
+  var ca=document.cookie.split(';');
+  for(var i=0;i<ca.length;i++){
+    var c=ca[i].trim();
+    if(c.indexOf(n)===0) return decodeURIComponent(c.substring(n.length));
+  }
+  return null;
+}
+function loadConfig(){
+  try{
+    // Try localStorage first, fallback to cookie
+    var ls = localStorage.getItem(STORE_KEY);
+    if(ls) return JSON.parse(ls)||{};
+    var ck = getCookie(STORE_KEY);
+    if(ck) return JSON.parse(ck)||{};
+    return {};
+  }catch(e){
+    try{
+      var ck = getCookie(STORE_KEY);
+      if(ck) return JSON.parse(ck)||{};
+    }catch(e2){}
+    return {};
+  }
+}
+function saveConfig(cfg){
+  var val = JSON.stringify(cfg);
+  try{ localStorage.setItem(STORE_KEY, val); }catch(e){}
+  try{ setCookie(STORE_KEY, val, 90); }catch(e){}
+}
 
 // Countdown logic
 let _tickInterval = null;
