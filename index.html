@@ -411,17 +411,6 @@ select.inp{cursor:pointer}
     </div>
   </div>
 
-  <!-- CTA -->
-  <div class="cta-card" id="contact">
-    <h2>¿Listo para renovar tu hogar?</h2>
-    <p>Contáctanos con tus medidas y cantidad de ventanas. Te enviamos la cotización formal en menos de 24 horas. Pregunta por el financiamiento Synchrony.</p>
-    <div class="cta-btns">
-      <a href="https://wa.me/17874153637?text=Hola!%20Vi%20el%20especial%20de%20ventanas%20projected%20y%20quiero%20cotizar." class="btn-wa" target="_blank">💬 WhatsApp</a>
-      <a href="tel:+17874153637" class="btn-call">📞 Llamar</a>
-      <a href="https://jdbaluminum.odoo.com/contactus" class="btn-cotiz">📋 Cotización formal</a>
-    </div>
-  </div>
-
   
 
   <!-- TERMS -->
@@ -809,21 +798,21 @@ window.addEventListener('resize', notifyParentHeight);
 
 // ── QUOTE FORM ───────────────────────────────────────────────────
 function updateQuoteSummary(){
-  const q   = parseInt(document.getElementById('qty').value)||1;
+  const q   = parseInt((document.getElementById('qty')||{value:'1'}).value)||1;
   const t   = tierFor(q);
-  const w   = document.getElementById('ancho') ? (document.getElementById('ancho').value||24) : 24;
-  const h   = document.getElementById('alto')  ? (document.getElementById('alto').value||48)  : 48;
+  const w   = (document.getElementById('ancho')||{value:'24'}).value||24;
+  const h   = (document.getElementById('alto') ||{value:'48'}).value||48;
   const el  = document.getElementById('qf-summary');
   if(!el) return;
   if(t){
     const total   = t.price * q;
     const monthly = total / 6;
-    el.innerHTML = '<strong>Tu cálculo:</strong> ' + q + ' ventana' + (q>1?'s':'') +
-      ' de ' + w + '" × ' + h + '" · <strong>$' + Math.round(t.price) + '/und</strong>' +
-      ' · Total: <strong>$' + Math.round(total).toLocaleString('en-US') + '</strong>' +
-      ' · Synchrony: <strong>$' + fmtDec(monthly) + '/mes × 6</strong>';
+    el.innerHTML = '<strong>Tu calculo:</strong> ' + q + ' ventana' + (q>1?'s':'') +
+      ' de ' + w + '" x ' + h + '" &nbsp;|&nbsp; <strong>$' + Math.round(t.price) + '/und</strong>' +
+      ' &nbsp;|&nbsp; Total: <strong>$' + Math.round(total).toLocaleString('en-US') + '</strong>' +
+      ' &nbsp;|&nbsp; Synchrony: <strong>$' + Math.round(monthly) + '/mes x 6</strong>';
   } else {
-    el.innerHTML = '<strong>Tu cálculo:</strong> ' + q + ' ventanas — precio por cotización especial';
+    el.innerHTML = '<strong>Tu calculo:</strong> ' + q + ' ventanas &mdash; precio por cotizacion especial';
   }
 }
 
@@ -843,14 +832,23 @@ function sendQuote(){
   if(btn) btn.disabled = true;
 
   // Build WhatsApp message to owner
+  // Get fresh calculation
+  const q   = parseInt((document.getElementById('qty')||{value:'1'}).value)||1;
+  const t   = tierFor(q);
+  const wi  = (document.getElementById('ancho')||{value:'24'}).value||24;
+  const hi  = (document.getElementById('alto') ||{value:'48'}).value||48;
+  const calcText = t ?
+    q + ' ventana' + (q>1?'s':'') + ' de ' + wi + '" x ' + hi + '" | $' + Math.round(t.price) + '/und | Total: $' + Math.round(t.price*q).toLocaleString('en-US') + ' | Synchrony: $' + Math.round(t.price*q/6) + '/mes x 6' :
+    q + ' ventanas - precio por cotizacion especial';
+
   const msg = encodeURIComponent(
-    '🏠 *NUEVA SOLICITUD DE COTIZACIÓN*\n\n' +
-    '👤 *Nombre:* ' + name + '\n' +
-    '📞 *Teléfono:* ' + tel + '\n' +
-    '📧 *Email:* ' + email + '\n\n' +
-    '📊 *Cálculo:* ' + sum + '\n\n' +
-    (notes ? '📝 *Notas:* ' + notes + '\n\n' : '') +
-    '📅 Fecha: ' + new Date().toLocaleString('es-PR')
+    '*NUEVA SOLICITUD DE COTIZACION - Blessed Windows*\n\n' +
+    '*Nombre:* ' + name + '\n' +
+    '*Telefono:* ' + tel + '\n' +
+    '*Email:* ' + email + '\n\n' +
+    '*Calculo:* ' + calcText + '\n\n' +
+    (notes ? '*Notas:* ' + notes + '\n\n' : '') +
+    '*Fecha:* ' + new Date().toLocaleString('es-PR')
   );
 
   // Open WhatsApp to owner
@@ -868,7 +866,7 @@ const _origUpdate = typeof update === 'function' ? update : null;
 // Initialize on load
 applyConfigData();
 applyConfig();
-setTimeout(updateQuoteSummary, 300);
+setTimeout(updateQuoteSummary, 800);
 
 </script>
 
