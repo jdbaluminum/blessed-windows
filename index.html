@@ -179,6 +179,8 @@ select.inp{cursor:pointer}
 .qf-success{display:none;background:#EAF3DE;border:1px solid #1D9E75;border-radius:10px;padding:16px;text-align:center;font-size:14px;color:#27500A;line-height:1.7}
 .qf-success strong{display:block;font-size:16px;margin-bottom:4px;color:#173404}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+<script>emailjs.init('ByFr8l6Ds6JQueuMb');</script>
 </head>
 <body>
 
@@ -850,6 +852,20 @@ function sendQuote(){
     (notes ? '*Notas:* ' + notes + '\n\n' : '') +
     '*Fecha:* ' + new Date().toLocaleString('es-PR')
   );
+
+  // Send email via EmailJS
+  emailjs.send('service_dggf5ga', 'template_0r6vjma', {
+    nombre:   name,
+    telefono: tel,
+    email:    email,
+    calculo:  calcText,
+    notas:    notes || 'Ninguna',
+    fecha:    new Date().toLocaleString('es-PR')
+  }).then(function(){
+    console.log('Email enviado');
+  }, function(error){
+    console.log('Email error:', error);
+  });
 
   // Open WhatsApp to owner
   window.open('https://wa.me/17874153637?text=' + msg, '_blank');
