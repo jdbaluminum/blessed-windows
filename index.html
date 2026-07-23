@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>V41 — Especial de Temporada — Ventanas de Aluminio · Blessed Windows Studio</title>
+<title>V42 — Especial de Temporada — Ventanas de Aluminio · Blessed Windows Studio</title>
 <style>
 /* Odoo mobile compatibility */
 #wrap, .o_main_navbar, .o_action_manager{display:block!important}
@@ -593,18 +593,18 @@ function runCountdown(){
     if(_tickInterval) clearInterval(_tickInterval);
     _tickInterval = setInterval(function(){
       var diff = Math.max(0, new Date(SPECIAL_START).getTime() - Date.now());
-      setText('cb-d', pad(diff/864e5));
-      setText('cb-h', pad((diff%864e5)/36e5));
-      setText('cb-m', pad((diff%36e5)/6e4));
-      setText('cb-s', pad((diff%6e4)/1e3));
+      var d=document.getElementById('cb-d'); if(d) d.textContent=pad(diff/864e5);
+      var h=document.getElementById('cb-h'); if(h) h.textContent=pad((diff%864e5)/36e5);
+      var m=document.getElementById('cb-m'); if(m) m.textContent=pad((diff%36e5)/6e4);
+      var s=document.getElementById('cb-s'); if(s) s.textContent=pad((diff%6e4)/1e3);
       if(diff===0){ clearInterval(_tickInterval); runCountdown(); }
     }, 1000);
     // Immediate tick
     var diff = Math.max(0, start - now);
-    setText('cb-d', pad(diff/864e5));
-    setText('cb-h', pad((diff%864e5)/36e5));
-    setText('cb-m', pad((diff%36e5)/6e4));
-    setText('cb-s', pad((diff%6e4)/1e3));
+    var d=document.getElementById('cb-d'); if(d) d.textContent=pad(diff/864e5);
+    var h=document.getElementById('cb-h'); if(h) h.textContent=pad((diff%864e5)/36e5);
+    var mm=document.getElementById('cb-m'); if(mm) mm.textContent=pad((diff%36e5)/6e4);
+    var ss=document.getElementById('cb-s'); if(ss) ss.textContent=pad((diff%6e4)/1e3);
 
   } else if(now >= start && now < end){
     // Active — countdown to end
@@ -612,17 +612,17 @@ function runCountdown(){
     if(_tickInterval) clearInterval(_tickInterval);
     _tickInterval = setInterval(function(){
       var diff = Math.max(0, new Date(SPECIAL_END).getTime() - Date.now());
-      setText('cd-d', pad(diff/864e5));
-      setText('cd-h', pad((diff%864e5)/36e5));
-      setText('cd-m', pad((diff%36e5)/6e4));
-      setText('cd-s', pad((diff%6e4)/1e3));
+      var d=document.getElementById('cd-d'); if(d) d.textContent=pad(diff/864e5);
+      var h=document.getElementById('cd-h'); if(h) h.textContent=pad((diff%864e5)/36e5);
+      var m=document.getElementById('cd-m'); if(m) m.textContent=pad((diff%36e5)/6e4);
+      var s=document.getElementById('cd-s'); if(s) s.textContent=pad((diff%6e4)/1e3);
       if(diff===0){ clearInterval(_tickInterval); runCountdown(); }
     }, 1000);
     var diff = Math.max(0, end - now);
-    setText('cd-d', pad(diff/864e5));
-    setText('cd-h', pad((diff%864e5)/36e5));
-    setText('cd-m', pad((diff%36e5)/6e4));
-    setText('cd-s', pad((diff%6e4)/1e3));
+    var d=document.getElementById('cd-d'); if(d) d.textContent=pad(diff/864e5);
+    var h=document.getElementById('cd-h'); if(h) h.textContent=pad((diff%864e5)/36e5);
+    var mm=document.getElementById('cd-m'); if(mm) mm.textContent=pad((diff%36e5)/6e4);
+    var ss=document.getElementById('cd-s'); if(ss) ss.textContent=pad((diff%6e4)/1e3);
 
   } else {
     // Ended
