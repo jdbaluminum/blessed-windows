@@ -510,6 +510,17 @@ const ADMIN_PWD = 'blessed2026';
 
 const STORE_KEY = 'bw_especial_config';
 
+// ── HARDCODED SPECIAL DATES ──────────────────────────────────────
+// These are set when you activate the special from the admin panel
+// Default: inactive
+var SPECIAL_ACTIVE = false;
+var SPECIAL_START  = '';
+var SPECIAL_END    = '';
+var SPECIAL_W      = 24;
+var SPECIAL_H      = 48;
+var SPECIAL_BASE   = 465.33;
+var SPECIAL_PRICES = [455, 439, 419, 369];
+
 function setCookie(name,value,days){
   var expires='';
   if(days){
@@ -529,20 +540,26 @@ function getCookie(name){
   return null;
 }
 function loadConfig(){
+  // First check hardcoded vars (set when file is saved from admin panel)
+  if(SPECIAL_ACTIVE && SPECIAL_START && SPECIAL_END){
+    return {
+      active: SPECIAL_ACTIVE,
+      start:  SPECIAL_START,
+      end:    SPECIAL_END,
+      w:      SPECIAL_W,
+      h:      SPECIAL_H,
+      base:   SPECIAL_BASE,
+      prices: SPECIAL_PRICES
+    };
+  }
+  // Fallback to localStorage
   try{
-    // Try localStorage first, fallback to cookie
     var ls = localStorage.getItem(STORE_KEY);
     if(ls) return JSON.parse(ls)||{};
     var ck = getCookie(STORE_KEY);
     if(ck) return JSON.parse(ck)||{};
     return {};
-  }catch(e){
-    try{
-      var ck = getCookie(STORE_KEY);
-      if(ck) return JSON.parse(ck)||{};
-    }catch(e2){}
-    return {};
-  }
+  }catch(e){ return {}; }
 }
 function saveConfig(cfg){
   var val = JSON.stringify(cfg);
@@ -778,20 +795,48 @@ function activateSpecial(){
   const w    = parseFloat(document.getElementById('adm-w').value)||24;
   const h    = parseFloat(document.getElementById('adm-h').value)||48;
   const base = parseFloat(document.getElementById('adm-base').value)||465;
-  const p1   = parseFloat(document.getElementById('adm-p1').value)||429;
-  const p2   = parseFloat(document.getElementById('adm-p2').value)||399;
-  const p3   = parseFloat(document.getElementById('adm-p3').value)||369;
-  const p4   = parseFloat(document.getElementById('adm-p4').value)||339;
-  saveConfig({
-    active:true,
-    start:new Date(start).toISOString(),
-    end:new Date(end).toISOString(),
-    w, h, base, prices:[p1,p2,p3,p4]
+  const p1   = parseFloat(document.getElementById('adm-p1').value)||455;
+  const p2   = parseFloat(document.getElementById('adm-p2').value)||439;
+  const p3   = parseFloat(document.getElementById('adm-p3').value)||419;
+  const p4   = parseFloat(document.getElementById('adm-p4').value)||369;
+
+  const startISO = new Date(start).toISOString();
+  const endISO   = new Date(end).toISOString();
+
+  // Save to storage as backup
+  saveConfig({active:true,start:startISO,end:endISO,w,h,base,prices:[p1,p2,p3,p4]});
+
+  // Generate new HTML with hardcoded dates for GitHub upload
+  fetch(window.location.href)
+  .then(r=>r.text())
+  .then(function(src){
+    src = src.replace('var SPECIAL_ACTIVE = false;', 'var SPECIAL_ACTIVE = true;');
+    src = src.replace("var SPECIAL_START  = '';", "var SPECIAL_START  = '"+startISO+"';");
+    src = src.replace("var SPECIAL_END    = '';", "var SPECIAL_END    = '"+endISO+"';");
+    src = src.replace('var SPECIAL_W      = 24;', 'var SPECIAL_W      = '+w+';');
+    src = src.replace('var SPECIAL_H      = 48;', 'var SPECIAL_H      = '+h+';');
+    src = src.replace('var SPECIAL_BASE   = 465.33;', 'var SPECIAL_BASE   = '+base+';');
+    src = src.replace('var SPECIAL_PRICES = [455, 439, 419, 369];', 'var SPECIAL_PRICES = ['+p1+','+p2+','+p3+','+p4+'];');
+
+    // Download the updated file
+    var blob = new Blob([src], {type:'text/html'});
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'index.html';
+    a.click();
+    URL.revokeObjectURL(a.href);
+
+    applyConfigData();
+    applyConfig();
+    loadAdminUI();
+    alert('✅ Archivo descargado. Sube el index.html a GitHub para activar el especial permanentemente.\n\nMedidas: '+w+'" × '+h+'" | Precios: $'+p1+' / $'+p2+' / $'+p3+' / $'+p4);
+  }).catch(function(){
+    // Fallback if fetch fails
+    applyConfigData();
+    applyConfig();
+    loadAdminUI();
+    alert('✅ Especial activado en este dispositivo.\nPara hacerlo permanente sube el archivo a GitHub manualmente.');
   });
-  applyConfigData();
-  applyConfig();
-  loadAdminUI();
-  alert('✅ Especial activado. Medidas: '+w+'" × '+h+'" · Precios: $'+p1+' / $'+p2+' / $'+p3+' / $'+p4);
 }
 function stopSpecial(){
   saveConfig({active:false});
