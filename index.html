@@ -161,6 +161,23 @@ select.inp{cursor:pointer}
 /* Mobile: add extra padding at bottom so iframe shows full content */
 
 .trust{display:flex;justify-content:center;flex-wrap:wrap;gap:14px;margin-bottom:10px;font-size:12px;color:#666}
+
+/* QUOTE FORM */
+.quote-form{background:#fff;border-radius:16px;border:1px solid #e5e7eb;padding:24px;margin-bottom:20px}
+.quote-form h2{font-size:18px;font-weight:800;margin-bottom:6px;color:#1a1a1a;display:flex;align-items:center;gap:8px}
+.quote-form p{font-size:13px;color:#666;margin-bottom:16px;line-height:1.6}
+.qf-summary{background:#EAF3DE;border:1px solid #B5D4A0;border-radius:10px;padding:12px 14px;margin-bottom:16px;font-size:13px;color:#27500A;line-height:1.7}
+.qf-summary strong{color:#173404}
+.qf-field{margin-bottom:12px}
+.qf-field label{display:block;font-size:12px;font-weight:700;color:#444;margin-bottom:5px}
+.qf-field input{width:100%;border:1.5px solid #e5e7eb;border-radius:8px;padding:10px 12px;font-size:14px;font-family:inherit;outline:none;color:#1a1a1a}
+.qf-field input:focus{border-color:#0C447C}
+.qf-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.qf-btn{width:100%;background:#1D9E75;color:#fff;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;margin-top:4px;font-family:inherit}
+.qf-btn:hover{background:#0F6E56}
+.qf-btn:disabled{background:#aaa;cursor:not-allowed}
+.qf-success{display:none;background:#EAF3DE;border:1px solid #1D9E75;border-radius:10px;padding:16px;text-align:center;font-size:14px;color:#27500A;line-height:1.7}
+.qf-success strong{display:block;font-size:16px;margin-bottom:4px;color:#173404}
 </style>
 </head>
 <body>
@@ -353,6 +370,47 @@ select.inp{cursor:pointer}
     </div>
   </div>
 
+  <!-- QUOTE FORM -->
+  <div class="container">
+    <div class="quote-form">
+      <h2>📋 Solicitar mi cotización</h2>
+      <p>Deja tus datos y te enviamos una cotización formal personalizada. Sin compromiso.</p>
+
+      <div class="qf-summary" id="qf-summary">
+        <strong>Tu cálculo:</strong> cargando...
+      </div>
+
+      <div class="qf-row">
+        <div class="qf-field">
+          <label>Nombre completo *</label>
+          <input type="text" id="qf-name" placeholder="Tu nombre">
+        </div>
+        <div class="qf-field">
+          <label>Teléfono *</label>
+          <input type="tel" id="qf-tel" placeholder="(787) 000-0000">
+        </div>
+      </div>
+      <div class="qf-field">
+        <label>Email *</label>
+        <input type="email" id="qf-email" placeholder="tucorreo@email.com">
+      </div>
+      <div class="qf-field">
+        <label>Notas adicionales (opcional)</label>
+        <input type="text" id="qf-notes" placeholder="Ej: necesito instalación, tengo otras medidas...">
+      </div>
+
+      <button class="qf-btn" id="qf-submit" onclick="sendQuote()">
+        📤 Enviar solicitud de cotización
+      </button>
+
+      <div class="qf-success" id="qf-success">
+        <strong>✅ ¡Solicitud enviada!</strong>
+        Nos comunicaremos contigo pronto al número y email indicado.<br>
+        También puedes contactarnos directamente al <strong>(787) 415-3637</strong>
+      </div>
+    </div>
+  </div>
+
   <!-- CTA -->
   <div class="cta-card" id="contact">
     <h2>¿Listo para renovar tu hogar?</h2>
@@ -441,7 +499,10 @@ function update(){
   }
 }
 
-document.getElementById('qty').addEventListener('input',update);
+document.getElementById('qty').addEventListener('input', function(){
+  update();
+  updateQuoteSummary();
+});
 document.getElementById('ancho').addEventListener('input',update);
 document.getElementById('alto').addEventListener('input',update);
 update();
@@ -746,9 +807,68 @@ window.addEventListener('load', function(){
 });
 window.addEventListener('resize', notifyParentHeight);
 
+// ── QUOTE FORM ───────────────────────────────────────────────────
+function updateQuoteSummary(){
+  const q   = parseInt(document.getElementById('qty').value)||1;
+  const t   = tierFor(q);
+  const w   = document.getElementById('ancho') ? (document.getElementById('ancho').value||24) : 24;
+  const h   = document.getElementById('alto')  ? (document.getElementById('alto').value||48)  : 48;
+  const el  = document.getElementById('qf-summary');
+  if(!el) return;
+  if(t){
+    const total   = t.price * q;
+    const monthly = total / 6;
+    el.innerHTML = '<strong>Tu cálculo:</strong> ' + q + ' ventana' + (q>1?'s':'') +
+      ' de ' + w + '" × ' + h + '" · <strong>$' + Math.round(t.price) + '/und</strong>' +
+      ' · Total: <strong>$' + Math.round(total).toLocaleString('en-US') + '</strong>' +
+      ' · Synchrony: <strong>$' + fmtDec(monthly) + '/mes × 6</strong>';
+  } else {
+    el.innerHTML = '<strong>Tu cálculo:</strong> ' + q + ' ventanas — precio por cotización especial';
+  }
+}
+
+function sendQuote(){
+  const name  = (document.getElementById('qf-name')  ||{}).value||'';
+  const tel   = (document.getElementById('qf-tel')   ||{}).value||'';
+  const email = (document.getElementById('qf-email') ||{}).value||'';
+  const notes = (document.getElementById('qf-notes') ||{}).value||'';
+  const sum   = (document.getElementById('qf-summary')||{}).textContent||'';
+
+  if(!name.trim()||!tel.trim()||!email.trim()){
+    alert('Por favor completa nombre, teléfono y email.');
+    return;
+  }
+
+  const btn = document.getElementById('qf-submit');
+  if(btn) btn.disabled = true;
+
+  // Build WhatsApp message to owner
+  const msg = encodeURIComponent(
+    '🏠 *NUEVA SOLICITUD DE COTIZACIÓN*\n\n' +
+    '👤 *Nombre:* ' + name + '\n' +
+    '📞 *Teléfono:* ' + tel + '\n' +
+    '📧 *Email:* ' + email + '\n\n' +
+    '📊 *Cálculo:* ' + sum + '\n\n' +
+    (notes ? '📝 *Notas:* ' + notes + '\n\n' : '') +
+    '📅 Fecha: ' + new Date().toLocaleString('es-PR')
+  );
+
+  // Open WhatsApp to owner
+  window.open('https://wa.me/17874153637?text=' + msg, '_blank');
+
+  // Show success
+  const success = document.getElementById('qf-success');
+  if(success) success.style.display = 'block';
+  if(btn){ btn.textContent = '✅ Solicitud enviada'; }
+}
+
+// Update summary when slider changes
+const _origUpdate = typeof update === 'function' ? update : null;
+
 // Initialize on load
 applyConfigData();
 applyConfig();
+setTimeout(updateQuoteSummary, 300);
 
 </script>
 
