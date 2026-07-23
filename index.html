@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>V42 — Especial de Temporada — Ventanas de Aluminio · Blessed Windows Studio</title>
+<title>V44 — Especial de Temporada — Ventanas de Aluminio · Blessed Windows Studio</title>
 <style>
 /* Odoo mobile compatibility */
 #wrap, .o_main_navbar, .o_action_manager{display:block!important}
@@ -459,6 +459,73 @@ window.addEventListener('load', function(){
 </div>
 
 <script>
+// ── SELF-CONTAINED COUNTDOWN (runs independently) ────────────────
+(function(){
+  var START = new Date('2026-08-01T12:00:00.000Z').getTime();
+  var END   = new Date('2026-08-31T20:00:00.000Z').getTime();
+  var ACTIVE = true;
+
+  function p(n){ return String(Math.floor(Math.abs(n))).padStart(2,'0'); }
+
+  function updateDisplay(){
+    var now = Date.now();
+
+    if(!ACTIVE){ return; }
+
+    if(now < START){
+      // Show before countdown
+      var diff = START - now;
+      var el;
+      el=document.getElementById('cb-d'); if(el) el.textContent=p(diff/864e5);
+      el=document.getElementById('cb-h'); if(el) el.textContent=p((diff%864e5)/36e5);
+      el=document.getElementById('cb-m'); if(el) el.textContent=p((diff%36e5)/6e4);
+      el=document.getElementById('cb-s'); if(el) el.textContent=p((diff%6e4)/1e3);
+      // Show/hide sections
+      el=document.getElementById('countdown-before'); if(el) el.style.display='block';
+      el=document.getElementById('countdown-wrap');   if(el) el.style.display='none';
+      el=document.getElementById('especial-ended');   if(el) el.style.display='none';
+      el=document.getElementById('urgency-bar');      if(el) el.style.background='#0C447C';
+      el=document.getElementById('urgency-msg');      if(el) el.textContent='⏳ Próximo especial — ¡prepárate!';
+
+    } else if(now < END){
+      // Show active countdown
+      var diff = END - now;
+      var el;
+      el=document.getElementById('cd-d'); if(el) el.textContent=p(diff/864e5);
+      el=document.getElementById('cd-h'); if(el) el.textContent=p((diff%864e5)/36e5);
+      el=document.getElementById('cd-m'); if(el) el.textContent=p((diff%36e5)/6e4);
+      el=document.getElementById('cd-s'); if(el) el.textContent=p((diff%6e4)/1e3);
+      el=document.getElementById('countdown-before'); if(el) el.style.display='none';
+      el=document.getElementById('countdown-wrap');   if(el) el.style.display='block';
+      el=document.getElementById('especial-ended');   if(el) el.style.display='none';
+      el=document.getElementById('urgency-bar');      if(el) el.style.background='#A32D2D';
+      el=document.getElementById('urgency-msg');      if(el) el.textContent='🔥 El especial termina en:';
+
+    } else {
+      // Ended
+      var el;
+      el=document.getElementById('countdown-before'); if(el) el.style.display='none';
+      el=document.getElementById('countdown-wrap');   if(el) el.style.display='none';
+      el=document.getElementById('especial-ended');   if(el) el.style.display='block';
+      el=document.getElementById('urgency-bar');      if(el) el.style.background='#555';
+    }
+  }
+
+  // Run immediately and every second
+  updateDisplay();
+  setInterval(updateDisplay, 1000);
+
+  // Also run when DOM is ready
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded', updateDisplay);
+  }
+  // And when tab becomes visible
+  document.addEventListener('visibilitychange', function(){
+    if(document.visibilityState==='visible') updateDisplay();
+  });
+})();
+// ── END SELF-CONTAINED COUNTDOWN ─────────────────────────────────
+
 const MONTHS=6;
 // Defaults — overridden by admin config
 window._BASE   = 465.33;
@@ -1010,16 +1077,28 @@ function initPage(){
 }
 
 if(document.readyState === 'loading'){
-  document.addEventListener('DOMContentLoaded', initPage);
+  document.addEventListener('DOMContentLoaded', function(){
+    initPage();
+    // Run countdown directly after page loads
+    setTimeout(runCountdown, 100);
+  });
 } else {
   initPage();
+  setTimeout(runCountdown, 100);
 }
 
-// Also re-apply when page becomes visible again (user returns to tab)
+// Re-run when user returns to tab
 document.addEventListener('visibilitychange', function(){
   if(document.visibilityState === 'visible'){
-    applyConfig();
+    if(_tickInterval) clearInterval(_tickInterval);
+    runCountdown();
   }
+});
+
+// Safety net: run countdown every time window gets focus
+window.addEventListener('focus', function(){
+  if(_tickInterval) clearInterval(_tickInterval);
+  runCountdown();
 });
 
 </script>
